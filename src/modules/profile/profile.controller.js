@@ -1,11 +1,8 @@
 import Profile from './profile.model.js';
 
-// Helper to get user ID (mocked for now)
-const getUserId = () => 'user-123';
-
 export const getProfile = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const profile = await Profile.findOne({ userId });
 
         if (!profile) {
@@ -20,7 +17,7 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const { height, startingWeight, targetWeight, weeklyGoal, activityLevel } = req.body;
 
         // Upsert profile

@@ -1,10 +1,8 @@
 import WeightLog from './weight.model.js';
 
-const getUserId = () => 'user-123';
-
 export const getWeightHistory = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const limit = parseInt(req.query.limit) || 30;
 
         const logs = await WeightLog.find({ userId })
@@ -19,7 +17,7 @@ export const getWeightHistory = async (req, res) => {
 
 export const logWeight = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const { weight, note, date } = req.body;
 
         const newLog = new WeightLog({
@@ -39,7 +37,7 @@ export const logWeight = async (req, res) => {
 // Simple stats endpoint
 export const getWeightStats = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const logs = await WeightLog.find({ userId }).sort({ date: 1 });
 
         if (logs.length === 0) {

@@ -1,10 +1,8 @@
 import WorkoutLog from './workouts.model.js';
 
-const getUserId = () => 'user-123';
-
 export const getWorkouts = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const limit = parseInt(req.query.limit) || 20;
 
         const workouts = await WorkoutLog.find({ userId })
@@ -19,7 +17,7 @@ export const getWorkouts = async (req, res) => {
 
 export const logWorkout = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const { type, durationMinutes, caloriesBurned, notes, date } = req.body;
 
         const newWorkout = new WorkoutLog({

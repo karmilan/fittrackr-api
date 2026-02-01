@@ -1,10 +1,8 @@
 import NutritionLog from './nutrition.model.js';
 
-const getUserId = () => 'user-123';
-
 export const getNutritionLogs = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const dateParam = req.query.date;
 
         let query = { userId };
@@ -26,7 +24,7 @@ export const getNutritionLogs = async (req, res) => {
 
 export const logNutrition = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         const { calories, protein, carbs, fats, mealType, date } = req.body;
 
         const newLog = new NutritionLog({
@@ -48,7 +46,7 @@ export const logNutrition = async (req, res) => {
 
 export const getDailySummary = async (req, res) => {
     try {
-        const userId = getUserId();
+        const userId = req.user.id;
         // Today's Date range
         const start = new Date();
         start.setHours(0, 0, 0, 0);
