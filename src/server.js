@@ -1,19 +1,15 @@
 import app from './app.js';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import connectDB from './config/db.js';
 import dns from 'node:dns';
 
+// Set DNS servers for SRV record resolution if needed
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-dotenv.config();
-
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/fittrackr';
 
 const startServer = async () => {
     try {
-        await mongoose.connect(MONGO_URI);
-        console.log('Connected to MongoDB');
+        await connectDB();
 
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

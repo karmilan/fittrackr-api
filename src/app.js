@@ -10,8 +10,13 @@ import workoutRoutes from './modules/workouts/workouts.routes.js';
 import nutritionRoutes from './modules/nutrition/nutrition.routes.js';
 import plannerRoutes from './modules/planner/planner.routes.js';
 import { errorHandler } from './middleware/error.js';
+import connectDB from './config/db.js';
 
 const app = express();
+
+// Connect to Database
+// In serverless environments, we initiate connection here
+connectDB();
 
 // Middleware
 app.use(express.json());
