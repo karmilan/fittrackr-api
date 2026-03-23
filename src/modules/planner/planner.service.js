@@ -1,11 +1,16 @@
 import Profile from '../profile/profile.model.js';
 import DailyPlan from './planner.model.js';
+// import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from "@google/genai";
+
+const genAI = new GoogleGenAI({ apiKey: "AIzaSyDymBBp39W8NAAaU8Jen-l1-sls4tFKdy0" });
 
 // Service Constraints / Constants
 const DEFAULT_AGE = 30;
 const DEFAULT_GENDER_IS_MALE = true;
 
 // Sample Database for Rule-Based Generation
+/*
 const MEAL_DATABASE = {
     breakfast: [
         { name: "Oatmeal with Berries", baseCalories: 350, proteinRatio: 0.15, carbRatio: 0.7, fatRatio: 0.15 },
@@ -61,6 +66,7 @@ const WORKOUT_ROTATION = {
         { type: "Cardio", description: "Water Aerobics / Swimming", durationMinutes: 40, intensity: "low" }
     ]
 };
+*/
 
 const calculateBMI = (weightKg, heightCm) => {
     const heightM = heightCm / 100;
@@ -75,9 +81,8 @@ const calculateBMI = (weightKg, heightCm) => {
     return { bmi, category };
 };
 
-/**
- * Generates a meal plan based on calorie target using standard splits.
- */
+/*
+// Generates a meal plan based on calorie target using standard splits.
 const generateMeals = (targetCalories) => {
     const mealPlan = [];
     const ratios = { breakfast: 0.3, lunch: 0.35, dinner: 0.25, snack: 0.1 };
@@ -105,9 +110,9 @@ const generateMeals = (targetCalories) => {
     return mealPlan;
 };
 
-/**
- * Selects a workout based on BMI Category and day rotation.
- */
+//
+// Selects a workout based on BMI Category and day rotation.
+//
 const generateWorkout = (date, bmiCategory) => {
     const options = WORKOUT_ROTATION[bmiCategory];
     const dayIndex = date.getDate() % options.length;
@@ -118,6 +123,60 @@ const generateWorkout = (date, bmiCategory) => {
         intensity: template.intensity,
         description: template.description
     };
+};
+*/
+
+const generateAIPlan = async (bmiCategory, targetCalories) => {
+    try {
+        const prompt = `You are an expert AI fitness coach and nutritionist. 
+Generate a daily meal plan and a workout routine for a user in the "${bmiCategory}" BMI category, targeting exactly ${targetCalories} calories for the day.
+The meal plan must include exactly 4 meals: breakfast, lunch, dinner, and snack.
+Return ONLY valid JSON matching this exact schema:
+{
+  "meals": [
+    {
+      "name": "String",
+      "type": "String (breakfast, lunch, dinner, or snack)",
+      "calories": Number,
+      "protein": Number,
+      "carbs": Number,
+      "fats": Number
+    }
+  ],
+  "workout": {
+    "type": "String",
+    "durationMinutes": Number,
+    "intensity": "String (low, medium, high)",
+    "description": "String"
+  }
+}
+Ensure the total calories sum up to approximately ${targetCalories}.`;
+
+        let response;
+        try {
+            response = await genAI.models.generateContent({
+                model: "gemini-3-flash-preview",
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json"
+                }
+            });
+        } catch (apiError) {
+            console.warn(`Primary model failed (${apiError.message}). Falling back to gemini-2.5-flash...`);
+            response = await genAI.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json"
+                }
+            });
+        }
+
+        return JSON.parse(response.text);
+    } catch (error) {
+        console.error("AI Generation failed:", error.message);
+        return null;
+    }
 };
 
 export const generatePlan = async (userId, date = new Date()) => {
@@ -155,8 +214,18 @@ export const generatePlan = async (userId, date = new Date()) => {
 
     // 3. Generate Plan Components
     const { category } = calculateBMI(weight, height);
-    const meals = generateMeals(finalCalories);
-    const workout = generateWorkout(date, category);
+
+    // Attempt AI Generation
+    const aiPlan = await generateAIPlan(category, finalCalories);
+    console.log('aiPlan', aiPlan);
+
+    if (!aiPlan || !aiPlan.meals || !aiPlan.workout) {
+        throw new Error("AI could not generate a valid meal and workout plan.");
+    }
+
+    const meals = aiPlan.meals;
+    const workout = aiPlan.workout;
+    console.log("Successfully generated AI meal and workout plan.");
 
     // 4. Persistence
     // Normalize date to midnight to ensure one plan per calendar day
