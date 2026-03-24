@@ -1,9 +1,10 @@
 import Profile from '../profile/profile.model.js';
 import DailyPlan from './planner.model.js';
-// import { GoogleGenerativeAI } from '@google/generative-ai';
+import dotenv from 'dotenv';
+dotenv.config();
 import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenAI({ apiKey: "AIzaSyDymBBp39W8NAAaU8Jen-l1-sls4tFKdy0" });
+const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
 // Service Constraints / Constants
 const DEFAULT_AGE = 30;
